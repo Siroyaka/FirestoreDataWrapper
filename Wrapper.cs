@@ -70,6 +70,7 @@ namespace FirestoreDataWrapper
                     pair => pair.Key,
                     pair => ParseFirestoreObject(pair.Value, prefix + (prefix.Length > 0 ? "." : "") + pair.Key, correspondings)
                 ),
+                null => null,
                 string x => x,
                 long x => x,
                 DateTime x => x.ToUniversalTime(),
@@ -86,13 +87,13 @@ namespace FirestoreDataWrapper
             {
                 if(sb.Length > 0) sb.AppendLine(",");
                 var nextPrefix = prefix + (prefix.Length > 0 ? "." : "") + items.Key;
-                Func<object, string> objectParser = (object x) => ParseJsonValue(x, nextPrefix, correspondings);
+                Func<object, string> objectParse = (object x) => ParseJsonValue(x, nextPrefix, correspondings);
                 var propertyName = correspondings.ContainsKey(nextPrefix) ? correspondings[nextPrefix] : items.Key;
                 var propertyValue = items.Value switch
                 {
-                    IEnumerable<object> list => $"[{string.Join(',', list.Select(x => objectParser(x)))}]",
-                    IEnumerable<long> list => $"[{string.Join(',', list.Select(x => objectParser(x)))}]",
-                    object x => objectParser(x),
+                    IEnumerable<object> list => $"[{string.Join(',', list.Select(x => objectParse(x)))}]",
+                    IEnumerable<long> list => $"[{string.Join(',', list.Select(x => objectParse(x)))}]",
+                    object x => objectParse(x),
                     null => "null"
                 };
 
