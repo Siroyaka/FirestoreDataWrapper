@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using MSJson = System.Text.Json;
@@ -17,7 +17,7 @@ namespace FirestoreDataWrapper
         }
 
         string DefaultParseDate(DateTime date) => date.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        public static string JpParseDate(DateTime date) => date.ToLocalTime().ToString("yyyy-MM-dd'T'HH:mm:ss+09:00");
+        public static string JpParseDate(DateTime date) => date.ToUniversalTime().AddHours(9).ToString("yyyy-MM-dd'T'HH:mm:ss+09:00");
 
         public void SetParseDate(Func<DateTime, string> func) => ParseDate = func;
 
