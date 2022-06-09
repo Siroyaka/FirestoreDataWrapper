@@ -56,8 +56,6 @@ namespace FirestoreDataWrapper
         {
             return data switch
             {
-                IEnumerable<object> x => x.Select(y => ParseFirestoreObject(y, prefix, correspondings)).ToList(),
-                IEnumerable<long> x => x.Select(y => ParseFirestoreObject(y, prefix, correspondings)).ToList(),
                 Dictionary<string, List<string>> x => x.ToDictionary(
                     pair => pair.Key,
                     pair => ParseFirestoreObject(pair.Value, prefix + (prefix.Length > 0 ? "." : "") + pair.Key, correspondings)
@@ -66,10 +64,18 @@ namespace FirestoreDataWrapper
                     pair => pair.Key,
                     pair => ParseFirestoreObject(pair.Value, prefix + (prefix.Length > 0 ? "." : "") + pair.Key, correspondings)
                 ),
-                Dictionary<string, object> x => x.ToDictionary(
+                Dictionary<string, bool> x => x,
+                Dictionary<string, long> x => x,
+                Dictionary<string, DateTime> x => x.ToDictionary(
+                    pair => pair.Key,
+                    pair => pair.Value.ToUniversalTime()
+                ),
+                Dictionary<string, Dictionary<object, object>> x => x.ToDictionary(
                     pair => pair.Key,
                     pair => ParseFirestoreObject(pair.Value, prefix + (prefix.Length > 0 ? "." : "") + pair.Key, correspondings)
                 ),
+                IEnumerable<long> x => x.Select(y => ParseFirestoreObject(y, prefix, correspondings)).ToList(),
+                IEnumerable<object> x => x.Select(y => ParseFirestoreObject(y, prefix, correspondings)).ToList(),
                 null => null,
                 string x => x,
                 long x => x,
@@ -79,7 +85,7 @@ namespace FirestoreDataWrapper
             };
         }
 
-        public string ToJson(Dictionary<string, object> data, string prefix = "", Dictionary<string, string> correspondings = null, bool shaped = false)
+        public string ToJson<T>(Dictionary<string, T> data, string prefix = "", Dictionary<string, string> correspondings = null, bool shaped = false)
         {
             if(correspondings == null) correspondings = new Dictionary<string, string>();
             var sb = new StringBuilder();
@@ -118,6 +124,10 @@ namespace FirestoreDataWrapper
                 long x => $"{x.ToString()}",
                 bool x => $"{(x ? "true" : "false")}",
                 FS.Timestamp x => $"\"{ParseDate(x.ToDateTime())}\"",
+                Dictionary<string, bool> x => ToJson(x, prefix, correspondings),
+                Dictionary<string, long> x => ToJson(x, prefix, correspondings),
+                Dictionary<string, string> x => ToJson(x, prefix, correspondings),
+                Dictionary<string, FS.Timestamp> x => ToJson(x, prefix, correspondings),
                 Dictionary<string, object> x => ToJson(x, prefix, correspondings),
                 _ => ""
             };
